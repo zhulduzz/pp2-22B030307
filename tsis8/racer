@@ -1,0 +1,173 @@
+#Imports
+import pygame
+import pygame.locals
+import sys
+import random
+import time
+
+#initializing
+pygame.init()
+
+#Colors
+Black = (0, 0, 0)
+White = (255, 255, 255)
+Grey = (128, 128, 128)
+Red = (255, 0, 0)
+Blue = (0, 0, 255)
+
+#variables
+Width = 400
+Height = 600
+Speed = 5
+game = True
+score = 0
+collect = 0
+
+#Setting up Fonts
+font = pygame.font.SysFont("Verdana", 60)
+font_small = pygame.font.SysFont("Verdana", 20)
+game_over = font.render("Game Over", True, Black)
+
+backround = pygame.image.load("images\\AnimatedStreet.png")
+
+#Creating screen
+display = pygame.display.set_mode((Width, Height))
+pygame.display.set_caption('Game')
+
+#Setting up FPS
+FPS = pygame.time.Clock()
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("images//Enemy.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(40,Width-40), 0)
+
+    def move(self):
+        self.rect.move_ip(0, 10)
+        if(self.rect.bottom > 600):
+            self.rect.top = 0
+            self.rect.center = (random.randint(30, 370) , 0)
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+    
+class player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("images//Player.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = (160, 520)
+
+    def update(self):
+        pressed_keys = pygame.key.get_pressed()
+        #if pressed_keys[pygame.K_UP]:
+            #self.rect.move_ip(0, -5)
+        #if pressed_keys[pygame.K_DOWN]:
+            #self.rect.move_ip(0, 5)
+        
+        if self.rect.left > 0:
+            if pressed_keys[pygame.K_LEFT]:
+                self.rect.move_ip(-5, 0)
+        if self.rect.right < Width:
+            if pressed_keys[pygame.K_RIGHT]:
+                self.rect.move_ip(5, 0)
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+class coin(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__
+
+        self.image = pygame.transform.scale(pygame.image.load("images//Coin.png"), (40, 40))
+
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(40, Width - 40), 0)
+    
+    def move(self):
+        global collect
+        self.rect.move_ip(0, 10)
+        if(self.rect.top > Height):
+            self.rect.top = 0
+            self.rect.center = (random.randint(40, Width - 40), 0)
+        elif pygame.sprite.spritecollideany(self,players ):
+            collect += 1
+            self.rect.top = 0
+            self.rect.center = (random.randint(40, Width - 40), 0)
+
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
+
+
+
+#Setting up Sprites
+P1 = player()
+E1 = Enemy()
+C1 = coin()
+
+#Creating Sprites Group
+enemises = pygame.sprite.Group()
+enemises.add(E1)
+all_sprites = pygame.sprite.Group()
+all_sprites.add(P1)
+all_sprites.add(E1)
+coins_group = pygame.sprite.Group()
+coins_group.add(C1)
+players = pygame.sprite.Group()
+players.add(P1)
+
+#Adding a New Event
+ins_speed = pygame.USEREVENT + 1
+pygame.time.set_timer(ins_speed, 1000)
+
+
+#Game Loop begins
+while game:
+    #Cycles throught all events occuring
+    for event in pygame.event.get():
+        if event.type == ins_speed:
+            Speed += 2
+
+        if event.type == pygame.QUIT:
+            game = False
+            sys.exit()
+
+
+    
+    display.blit(backround, (0, 0))
+    scores = font_small.render(str(score), True, Black)
+    display.blit(scores, (10, 10))
+
+
+    #Moves and Re-Draws all sprites
+    for entity in all_sprites:
+        display.blit(entity.image, entity.rect)
+
+    #To be run if collision occurs between PLayer and Enemy
+    if pygame.sprite.spritecollideany(P1, enemises):
+        pygame.mixer.Sound("images/crash.wav").play()
+        time.sleep(0.5)
+
+        display.fill(Red)
+        display.blit(game_over, (30, 250))
+
+        pygame.display.update()
+        for entity in all_sprites:
+            entity.kill()
+        time.sleep(2)
+        pygame.quit()
+        sys.exit()
+
+    P1.update()
+    E1.move()
+
+    P1.draw(display)
+    E1.draw(display)
+    #C1.draw(display)
+
+    pygame.display.update()
+    FPS.tick(60)
