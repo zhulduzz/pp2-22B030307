@@ -1,0 +1,46 @@
+import pygame
+import os
+
+pygame.init()
+
+path = "C:\\pp2\\pygame\\music\\"
+music = os.listdir(path)
+print(music)
+
+screen = pygame.display.set_mode((400, 400))
+pygame.display.set_caption("Music player")
+
+pygame.mixer.music.load(music[0])
+
+now = 0
+pygame.mixer.music.play()
+
+play = True
+key = pygame.key.get_pressed()
+
+
+while play:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            play = False
+        elif event.type == pygame.KEYDOWN:     
+            if event.key == pygame.K_SPACE:
+                if pygame.mixer.music.get_busy():
+                    pygame.mixer.music.pause()
+                else:
+                    pygame.mixer.music.unpause()
+            elif event.key == pygame.K_RIGHT:
+                if now == len(music) - 1:
+                    now = 0
+                else:
+                    now += 1
+                    pygame.mixer.music.load(path + music[now])
+                    pygame.mixer.music.play()
+                
+            elif event.key == pygame.K_LEFT:
+                if now == len(music) - 1:
+                    now = 0
+                else:
+                    now -= 1
+                    pygame.mixer.music.load(path + music[now])
+                    pygame.mixer.music.play()
