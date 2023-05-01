@@ -1,5 +1,6 @@
 import psycopg2
 from config import config
+import csv
 
 
 
@@ -56,6 +57,79 @@ def insert_vendor_list(vendor_list):
         if conn is not None:
             conn.close()
 
+def insert_csv():
+    connect = None
+
+    try:
+        params = config()
+
+        connect = psycopg2.connect(**params)
+
+        cursor = connect.cursor()
+        array = []
+        
+
+        with open('data.csv') as file:
+         reader = csv.reader(file, delimiter=',')
+        
+         for row in reader:
+             array.append(row)
+        
+        
+        sql = """
+        INSERT INTO phonebook(username,telephone_number,city,age) VALUES(%s, %s, %s, %s) RETURNING *;
+        """
+
+        for row in array:
+            cursor.execute(sql, row)
+
+        final = cursor.fetchall()
+        print(final)
+        
+        cursor.close()
+        connect.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if connect is not None:
+            connect.close()
+            print('Database connection closed.')
+    
+def insert_console():
+    connect = None
+
+    try:
+        params = config()
+
+        connect = psycopg2.connect(**params)
+
+        cursor = connect.cursor()
+        
+        sql = """
+        INSERT INTO phonebook(username,telephone_number,city,age) VALUES(%s, %s, %s, %s)
+        """
+
+        print("username: ")
+        username = input()
+        print("telephone_number: ")
+        telephone_number = input()
+        print("city: ")
+        city = input()
+        print("age: ")
+        age = input()
+
+        cursor.execute(sql, (username, telephone_number,city,age))
+
+
+        cursor.close()
+        connect.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if connect is not None:
+            connect.close()
+            print('Database connection closed.')
+
 def connect():
     connect = None
 
@@ -67,6 +141,118 @@ def connect():
         cursor = connect.cursor()
 
         cursor.close()
+        connect.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if connect is not None:
+            connect.close()
+            print('Database connection closed.')
+
+def update_table():
+    connect = None
+
+    try:
+        params = config()
+
+        connect = psycopg2.connect(**params)
+
+        cursor = connect.cursor()
+        
+        number = int(input("Change .. number: "))
+        print("Update ... data: ")
+        date = input()
+        date = date.lower()
+        updata = input('To what value set the {date}: ')
+        if date == 'username':
+            sql = """
+            UPDATE phonebook SET username = %s WHERE number = %s;
+            """
+        elif date == 'telephone_number':
+            sql = """
+            UPDATE phonebook SET telephone_number = %s WHERE number = %s;
+            """
+        elif date == 'city':
+            sql = """
+            UPDATE phonebook SET city = %s WHERE number = %s;
+            """
+        elif date == 'age':
+            sql = """
+            UPDATE phonebook SET age = %s WHERE number = %s;
+            """
+        
+        cursor.execute(sql, (updata, number))
+
+        cursor.close()
+        connect.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if connect is not None:
+            connect.close()
+            print('Database connection closed.')
+    
+def get_parts():
+    
+    conn = None
+    try:
+        params = config()
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        cur.execute("SELECT username,telephone_number,city,age FROM phonebook ORDER BY username")
+        rows = cur.fetchall()
+        print("The number of parts: ", cur.rowcount)
+        for row in rows:
+            print(row)
+
+        cur.execute("SELECT city FROM phonebook WHERE city = 'Canada'")
+        cur1 = cur.fetchall()
+        print(cur1)
+
+        cur.close()
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()  
+
+def delete():
+    connect = None
+
+    try:
+        params = config()
+
+        connect = psycopg2.connect(**params)
+
+        cursor = connect.cursor()
+        
+        
+        
+        delete_date = input("Delete: ")
+        delete_date = delete_date.lower()
+        updata = input('Which {delete_date} delete: ')
+        if delete_date == 'username':
+            sql = """
+            DELETE FROM phonebook WHERE username = %s RETURNING *;
+            """
+        elif delete_date == 'telephone_number':
+            sql = """
+            DELETE phonebook WHERE number = %s RETURNING *;
+            """
+        elif delete_date == 'city':
+            sql = """
+            DELETE phonebook WHERE number = %s RETURNING *;
+            """
+        elif delete_date == 'age':
+            sql = """
+            DELETE phonebook WHERE number = %s RETURNING *;
+            """
+        
+        cursor.execute(sql, (updata,))
+
+        cursor.close()
+        connect.commit()
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
@@ -75,60 +261,10 @@ def connect():
             print('Database connection closed.')
 
 
-def update_table(number, username):
-    
-    sql = """ UPDATE phonebook
-                SET username = %s
-                WHERE number = %s"""
-    conn = None
-    updated_rows = 0
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the UPDATE  statement
-        cur.execute(sql, (username, number))
-        # get the number of updated rows
-        updated_rows = cur.rowcount
-        # Commit the changes to the database
-        conn.commit()
-        # Close communication with the PostgreSQL database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    return updated_rows
 
 
 
-connect = None
 
-
-try:
-    params = config()
-
-    connect = psycopg2.connect(**params)
-    
-    #insert_data = "INSERT INTO phonebook(username,telephone_number,city,age) VALUES( %s , %s , %s , %s );"
-
-    cursor = connect.cursor()
-    
-    
-    
-    connect.commit()
-    cursor.close()
-except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-finally:
-    if connect is not None:
-        connect.close()
-        print('Database connection closed.')
 
 #insert_vendor_list(
  #   [
@@ -136,5 +272,9 @@ finally:
   #  ]
 #)
 
-update_table(1, "Brendon")
-
+#update_table(1, "Brendon")
+#insert_csv()
+#insert_console()
+#update_table()
+#get_parts()
+#delete()
