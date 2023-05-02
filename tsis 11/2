@@ -1,0 +1,59 @@
+import psycopg2 
+from psycopg2 import Error 
+
+new_number, new_username, new_telephone, new_city, new_age = input(), input(), input(), input(), input()
+
+def create_func(query): 
+    try: 
+        connection = psycopg2.connect( 
+            host='localhost',  
+            database='PhoneBook', 
+            user='postgres', 
+            password='zhuka' 
+        ) 
+        cursor = connection.cursor() 
+        cursor.execute(query) 
+        connection.commit() 
+ 
+    except (Exception, Error) as error: 
+        print("Error with PostgreSQL", error) 
+    finally: 
+        if connection: 
+            cursor.close() 
+            connection.close() 
+            print('Procedure is created') 
+ 
+postgresql_proc = """ 
+CREATE OR REPLACE PROCEDURE add_user(n_number integer, n_username text, n_telephone_number bigint, n_city text, n_age bigint) 
+AS $$  
+BEGIN 
+    IF EXISTS (select * from phonebook where username = n_username) THEN 
+        UPDATE phonebook SET telephone_number = n_telephone_number where username = n_username;
+    ELSE
+        INSERT INTO phonebook Values (n_number, n_username, n_telephone_number, n_city, n_age);
+END IF;
+END; 
+$$ 
+LANGUAGE plpgsql 
+""" 
+create_func(postgresql_proc)
+
+
+try: 
+    connection = psycopg2.connect( 
+        host='localhost',  
+        database='PhoneBook', 
+        user='postgres', 
+        password='zhuka' 
+    ) 
+ 
+    cursor = connection.cursor() 
+    cursor.execute('CALL add_user(%s, %s, %s, %s, %s)', (new_number, new_username, new_telephone, new_city, new_age)) 
+    connection.commit() 
+ 
+except (Exception, Error) as error: 
+    print("ERROR", error) 
+finally: 
+    if connection: 
+        cursor.close() 
+        connection.close()
