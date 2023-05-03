@@ -1,0 +1,25 @@
+import psycopg2
+from config import config
+
+connect = psycopg2.connect("dbname= PhoneBook user= postgres password= zhuka")
+cursor = connect.cursor()
+cursor.execute("SELECT * FROM phonebook")
+print(cursor.fetchall())
+
+
+
+arr = [
+    ['12', 'name1', 'surname1', '87783772991', 'Tokyo', '32'],
+    ['13', 'name2', 'surname2', '87783777991', 'Paris', '55'],
+    ['14', 'name3', 'surname3', '87753772991', 'Canada', '23'],
+    ['15', 'name4', 'surname4', '87783872991', 'Italy', '22'],
+    ['16', 'name5', 'surname5', '87783772771', 'Germany', '67']
+]
+def insert_list(arr):
+    connect = psycopg2.connect("dbname=PhoneBook user=postgres password=zhuka")
+    cursor = connect.cursor()
+    for data in arr:
+        cursor.execute("insert into phonebook(number, username, telephone_number, city, age) values(%s, %s, %s, %s, %s)", (data))
+    connect.commit()
+    connect.close()
+
