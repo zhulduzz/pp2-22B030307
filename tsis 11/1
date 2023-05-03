@@ -26,3 +26,38 @@ finally:
     if connection:
         cursor.close()
         connection.close()
+
+
+
+
+
+def create_func(query):
+    try:
+        connection = psycopg2.connect(
+            host='localhost', 
+            database='PhoneBook',
+            user='postgres',
+            password='zhuka'
+            )
+        cursor = connection.cursor()
+        cursor.execute(query)
+        connection.commit()
+
+    except (Exception, Error) as error:
+        print("Error with PostgreSQL", error)
+    finally:
+        if connection:
+            cursor.close()
+            connection.close()
+
+
+postgresql_func = """
+CREATE OR REPLACE FUNCTION pattern()
+  RETURNS TABLE(number integer, username text, telephone_number bigint, city text, age bigint) AS $$
+BEGIN
+ RETURN QUERY
+ SELECT * FROM phonebook where phonebook.telephone_number LIKE '%i%' ;
+END;
+$$ LANGUAGE plpgsql;
+"""
+create_func(postgresql_func)
